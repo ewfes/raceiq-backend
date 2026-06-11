@@ -5,7 +5,7 @@ import requests
 from requests.auth import HTTPBasicAuth
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, origins="*", allow_headers=["Content-Type"], methods=["GET", "POST", "OPTIONS"])
 
 RACING_API_BASE = "https://api.theracingapi.com/v1"
 
