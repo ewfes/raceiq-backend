@@ -38,6 +38,32 @@ def horses_batch():
             results[name] = {"found": False, "error": str(e)}
     return jsonify(results)
 
+
+import anthropic
+
+@app.route("/analyse", methods=["POST"])
+def analyse():
+    data = request.get_json(force=True) or {}
+    image_b64 = data.get("image")
+    horses_list = data.get("horses_list", "")
+    race_info = data.get("race_info", "")
+    username = data.get("username")
+    password = data.get("password")
+    
+    client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
+    
+    # Extract horses from image
+    msg = client.messages.create(
+        model="claude-sonnet-4-20250514",
+        max_tokens=800,
+        messages=[{"role":"user","content":[
+            {"type":"image","source":{"type":"base64","media_type":"image/jpeg","data":image_b64}},
+            {"type":"text","text":'Racing racecard. Return ONLY raw JSON: {"race":{"venue":"str","time":"str","distance":"str","going":"str"},"horses":[{"name":"str","number":"str","odds":"str","jockey":"str","trainer":"str"}]}'}
+        ]}]
+    )
+    return jsonify({"result": msg.content[0].text})
+
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
     app.run(host="0.0.0.0", port=port, use_reloader=False, threaded=True)
