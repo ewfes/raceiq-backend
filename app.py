@@ -24,7 +24,7 @@ def racing_get(path, username, password, params=None):
 
 @app.route("/", methods=["GET"])
 def index():
-    return jsonify({"status": "ok", "service": "RaceIQ Backend v2"})
+    return jsonify({"status": "ok", "service": "RaceIQ Backend"})
 
 
 @app.route("/health", methods=["GET"])
@@ -86,4 +86,4 @@ def get_horses_batch():
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=port, debug=False)
