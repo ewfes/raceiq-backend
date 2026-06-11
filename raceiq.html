@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RaceIQ - Horse Racing Analyzer</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0d0d0f; color: #e8e8ea; font-family: 'Inter', system-ui, sans-serif; min-height: 100vh; }
+header { background: linear-gradient(135deg,#0d0d0f,#1a1020); border-bottom: 1px solid rgba(255,255,255,0.07); padding: 18px 20px; display: flex; align-items: center; gap: 10px; }
+header h1 { font-size: 20px; font-weight: 800; color: #fff; }
+header p { font-size: 10px; color: #555; letter-spacing: 0.12em; text-transform: uppercase; }
+.container { max-width: 720px; margin: 0 auto; padding: 16px; }
+.card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+.label { font-size: 11px; color: #666; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+.row { display: flex; gap: 8px; }
+input { flex: 1; background: #111; border: 1px solid rgba(255,255,255,0.1); border-radius: 7px; padding: 8px 10px; color: #e8e8ea; font-size: 13px; outline: none; }
+input::placeholder { color: #333; }
+button { background: #1e3a5f; border: none; border-radius: 7px; padding: 8px 14px; color: #fff; font-size: 13px; cursor: pointer; font-weight: 600; white-space: nowrap; }
+button.green { background: #166534; }
+button.purple { background: linear-gradient(135deg,#7c3aed,#4f46e5); font-size: 15px; padding: 13px; border-radius: 10px; width: 100%; margin-bottom: 14px; }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+.status { font-size: 11px; margin-top: 8px; display: flex; gap: 12px; }
+.dot-ok { color: #4ade80; } .dot-err { color: #555; }
+.upload-area { border: 2px dashed rgba(255,255,255,0.12); border-radius: 12px; padding: 28px; text-align: center; cursor: pointer; margin-bottom: 14px; }
+.upload-area img { max-height: 280px; max-width: 100%; border-radius: 8px; display: block; margin: 0 auto; }
+.upload-icon { font-size: 32px; margin-bottom: 8px; }
+.loading { background: rgba(124,58,237,0.08); border: 1px solid rgba(124,58,237,0.2); border-radius: 12px; padding: 16px 18px; margin-bottom: 14px; display: flex; align-items: center; gap: 12px; }
+.loading b { font-weight: 700; color: #a78bfa; }
+.error-box { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); border-radius: 12px; padding: 12px 14px; margin-bottom: 14px; color: #f87171; font-size: 13px; }
+.race-info { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; }
+.prediction { background: linear-gradient(135deg,rgba(124,58,237,0.1),rgba(79,70,229,0.07)); border: 1px solid rgba(124,58,237,0.22); border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; }
+.pred-title { font-size: 11px; color: #a78bfa; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+.horse-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.07); border-radius: 10px; padding: 14px 16px; margin-bottom: 8px; display: flex; align-items: flex-start; gap: 14px; }
+.horse-card.top1 { background: rgba(255,255,255,0.04); border-color: rgba(255,215,0,0.3); }
+.rank { width: 28px; height: 28px; border-radius: 50%; background: #ffffff11; border: 1px solid #333; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; color: #666; flex-shrink: 0; margin-top: 2px; }
+.r1 { background: rgba(255,215,0,0.15)!important; border-color: #ffd700!important; color: #ffd700!important; }
+.r2 { background: rgba(192,192,192,0.15)!important; border-color: #c0c0c0!important; color: #c0c0c0!important; }
+.r3 { background: rgba(205,127,50,0.15)!important; border-color: #cd7f32!important; color: #cd7f32!important; }
+.badge { padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; white-space: nowrap; }
+.bg { background: #1a3a1a; color: #4ade80; border: 1px solid #166534; }
+.by { background: #2a2a0a; color: #fbbf24; border: 1px solid #854d0e; }
+.br { background: #3a0a0a; color: #f87171; border: 1px solid #991b1b; }
+.bb { background: #0a1a3a; color: #60a5fa; border: 1px solid #1e40af; }
+.logs { background: #080808; border: 1px solid rgba(255,255,255,0.07); border-radius: 10px; margin-bottom: 14px; overflow: hidden; }
+.logs-header { padding: 8px 14px; font-size: 11px; color: #555; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; }
+.logs-body { max-height: 160px; overflow-y: auto; padding: 10px 14px; }
+.ll { font-size: 11px; font-family: monospace; margin-bottom: 3px; word-break: break-all; }
+.lt { color: #333; } .li { color: #666; } .ls { color: #4ade80; } .le { color: #f87171; } .lw { color: #fbbf24; }
+.hidden { display: none; }
+</style>
+</head>
+<body>
+<header>
+  <span style="font-size:26px">🏇</span>
+  <div><h1>RaceIQ</h1><p>AI Horse Racing Analyzer</p></div>
+  <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+    <span id="lastUpdate" style="font-size:11px;color:#444"></span>
+    <button onclick="toggleLogs()" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:4px 10px;color:#666;font-size:11px">📋 Логи</button>
+  </div>
+</header>
+
+<div class="container">
+  <div class="card">
+    <div class="label">⚙️ Налаштування</div>
+    <div style="margin-bottom:8px">
+      <div style="font-size:11px;color:#555;margin-bottom:4px">Backend URL</div>
+      <div class="row">
+        <input type="text" id="backendUrl" value="https://web-production-b27b8.up.railway.app">
+        <button onclick="testBackend()" id="testBtn">Тест</button>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:11px;color:#555;margin-bottom:4px">Racing API credentials</div>
+      <div class="row">
+        <input type="text" id="apiUser" placeholder="Username">
+        <input type="password" id="apiPass" placeholder="Password">
+        <button onclick="saveCreds()" id="saveBtn">OK</button>
+      </div>
+    </div>
+    <div class="status">
+      <span id="backendStatus" class="dot-err">● Бекенд: не перевірено</span>
+      <span id="apiStatus" class="dot-err">● Racing API: не вказано</span>
+    </div>
+  </div>
+
+  <div class="logs hidden" id="logsPanel">
+    <div class="logs-header">
+      <span id="logsCount">📋 Логи (0)</span>
+      <button onclick="clearLogs()" style="background:none;border:none;color:#444;font-size:11px;cursor:pointer;padding:0">очистити</button>
+    </div>
+    <div class="logs-body" id="logsBody"></div>
+  </div>
+
+  <div class="upload-area" id="uploadArea" onclick="document.getElementById('fi').click()" ondragover="event.preventDefault()" ondrop="handleDrop(event)">
+    <div id="ph"><div class="upload-icon">📸</div><h3 style="font-size:14px;font-weight:700">Скинь скрін картки забігу</h3><p style="color:#555;font-size:12px;margin-top:4px">Betway, Racing Post, Paddy Power</p></div>
+    <img id="prev" class="hidden">
+    <input type="file" id="fi" accept="image/*" style="display:none" onchange="handleFile(this.files[0])">
+  </div>
+
+  <button class="purple hidden" onclick="runAnalysis()" id="mainBtn">🔮 Аналізувати забіг</button>
+
+  <div class="loading hidden" id="loadingBox"><span>⚙️</span><b id="loadingText">...</b></div>
+  <div class="error-box hidden" id="errorBox"></div>
+  <div class="race-info hidden" id="raceInfo"></div>
+
+  <div class="prediction hidden" id="predBox">
+    <div class="pred-title">🎯 Прогноз</div>
+    <div id="predContent"></div>
+  </div>
+
+  <div id="horsesSection" class="hidden">
+    <div style="font-size:11px;color:#555;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px">Рейтинг коней</div>
+    <div id="horsesList"></div>
+  </div>
+</div>
+
+<script>
+let imageBase64 = null;
+let logs = [];
+let backendOk = false;
+
+function addLog(msg, type="info") {
+  const time = new Date().toLocaleTimeString("uk-UA",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+  logs.push({time,msg,type});
+  if(logs.length>100) logs.shift();
+  const body = document.getElementById("logsBody");
+  body.innerHTML = logs.map(l=>`<div class="ll"><span class="lt">${l.time} </span><span class="l${l.type[0]}">${l.msg}</span></div>`).join("");
+  body.scrollTop = body.scrollHeight;
+  document.getElementById("logsCount").textContent = `📋 Логи (${logs.length})`;
+}
+function clearLogs() { logs=[]; document.getElementById("logsBody").innerHTML=""; document.getElementById("logsCount").textContent="📋 Логи (0)"; }
+function toggleLogs() { document.getElementById("logsPanel").classList.toggle("hidden"); }
+
+async function testBackend() {
+  const url = document.getElementById("backendUrl").value.trim();
+  document.getElementById("testBtn").textContent = "...";
+  try {
+    const r = await fetch(`${url}/health`);
+    const d = await r.json();
+    if(d.status==="ok") {
+      backendOk=true;
+      document.getElementById("testBtn").textContent="✓ OK";
+      document.getElementById("testBtn").className="green";
+      document.getElementById("backendStatus").textContent="● Бекенд: підключено";
+      document.getElementById("backendStatus").className="dot-ok";
+      addLog(`✓ Бекенд OK`, "success");
+    }
+  } catch(e) {
+    backendOk=false;
+    document.getElementById("testBtn").textContent="✗ Помилка";
+    document.getElementById("backendStatus").textContent="● Бекенд: помилка";
+    addLog(`✗ ${e.message}`, "error");
+  }
+}
+
+function saveCreds() {
+  if(document.getElementById("apiUser").value && document.getElementById("apiPass").value) {
+    document.getElementById("saveBtn").textContent="✓";
+    document.getElementById("saveBtn").className="green";
+    document.getElementById("apiStatus").textContent="● Racing API: credentials є";
+    document.getElementById("apiStatus").className="dot-ok";
+    addLog("Credentials збережено","success");
+  }
+}
+
+function handleDrop(e) { e.preventDefault(); handleFile(e.dataTransfer.files[0]); }
+function handleFile(file) {
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    imageBase64 = e.target.result.split(",")[1];
+    document.getElementById("prev").src = e.target.result;
+    document.getElementById("prev").classList.remove("hidden");
+    document.getElementById("ph").classList.add("hidden");
+    document.getElementById("mainBtn").classList.remove("hidden");
+    document.getElementById("uploadArea").style.cssText = "padding:0;border:1px solid rgba(255,255,255,0.08);border-radius:12px;margin-bottom:14px;overflow:hidden";
+    ["horsesSection","predBox","raceInfo","errorBox"].forEach(id=>document.getElementById(id).classList.add("hidden"));
+    addLog(`Файл: ${file.name}`,"success");
+  };
+  reader.readAsDataURL(file);
+}
+
+function extractJSON(text) {
+  if(!text) return null;
+  try { return JSON.parse(text.trim()); } catch {}
+  const s = text.replace(/```json\s*/gi,"").replace(/```\s*/gi,"").trim();
+  try { return JSON.parse(s); } catch {}
+  const i=text.indexOf("{"), j=text.lastIndexOf("}");
+  if(i!==-1&&j>i) { try { return JSON.parse(text.slice(i,j+1)); } catch {} }
+  return null;
+}
+
+async function runAnalysis() {
+  const url = document.getElementById("backendUrl").value.trim();
+  const user = document.getElementById("apiUser").value;
+  const pass = document.getElementById("apiPass").value;
+
+  document.getElementById("errorBox").classList.add("hidden");
+  document.getElementById("mainBtn").disabled = true;
+
+  try {
+    // Step 1: extract via backend /analyse
+    document.getElementById("loadingBox").classList.remove("hidden");
+    document.getElementById("loadingText").textContent = "🔍 Розпізнаю коней...";
+    addLog("Надсилаю скрін на бекенд...");
+
+    const extractRes = await fetch(`${url}/analyse`, {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({image: imageBase64, username: user, password: pass})
+    });
+    const extractData = await extractRes.json();
+    if(extractData.error) throw new Error(extractData.error);
+
+    const extracted = extractJSON(extractData.result);
+    if(!extracted?.horses?.length) throw new Error("Не вдалось розпізнати коней. Спробуй чіткіший скрін.");
+    addLog(`✓ ${extracted.horses.length} коней: ${extracted.horses.map(h=>h.name).join(", ")}`, "success");
+
+    // Show race info
+    const ri = extracted.race || {};
+    const riParts = [ri.venue?`📍 <b>${ri.venue}</b>`:"", ri.time?`🕐 ${ri.time}`:"", ri.distance?`📏 ${ri.distance}`:"", ri.going?`🌿 ${ri.going}`:""].filter(Boolean);
+    if(riParts.length) {
+      document.getElementById("raceInfo").innerHTML = riParts.join(" &nbsp;");
+      document.getElementById("raceInfo").classList.remove("hidden");
+    }
+
+    // Step 2: fetch horse data
+    document.getElementById("loadingText").textContent = "📡 Завантажую форму коней...";
+    let horseDataMap = {};
+    if(user && pass) {
+      try {
+        const r = await fetch(`${url}/horses-batch`, {
+          method:"POST", headers:{"Content-Type":"application/json"},
+          body: JSON.stringify({names: extracted.horses.map(h=>h.name), username:user, password:pass})
+        });
+        horseDataMap = await r.json();
+        const found = Object.values(horseDataMap).filter(v=>v.found).length;
+        addLog(`✓ Racing API: ${found}/${extracted.horses.length} знайдено`, "success");
+      } catch(e) { addLog(`⚠ Racing API: ${e.message}`, "warn"); }
+    }
+
+    // Step 3: analyse via backend
+    document.getElementById("loadingText").textContent = "🧠 Аналізую...";
+    addLog("Аналізую...");
+
+    const horsesList = extracted.horses.map(h => {
+      const d = horseDataMap[h.name];
+      let s = `${h.number||"?"}) ${h.name} odds:${h.odds||"?"} jockey:${h.jockey||"?"} trainer:${h.trainer||"?"}`;
+      if(d?.results?.length) s += ` | last5:${d.results.slice(0,5).map(r=>`${r.position}/${r.runners}`).join("-")}`;
+      return s;
+    }).join("\n");
+
+    const analysisRes = await fetch(`${url}/analyse-horses`, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        horses_list: horsesList,
+        race_info: `${ri.venue} ${ri.time} ${ri.distance} ${ri.going}`,
+        username: user, password: pass
+      })
+    });
+    const analysisData = await analysisRes.json();
+    if(analysisData.error) throw new Error(analysisData.error);
+
+    const analysis = extractJSON(analysisData.result);
+    if(!analysis?.horses) throw new Error("Помилка аналізу. Спробуй ще раз.");
+
+    // Render prediction
+    document.getElementById("predContent").innerHTML = `
+      ${analysis.topPick?`<div style="margin-bottom:4px"><span style="color:#777;font-size:12px">Фаворит: </span><b style="font-size:15px;color:#ffd700">${analysis.topPick}</b></div>`:""}
+      ${analysis.valueBet?`<div style="margin-bottom:8px"><span style="color:#777;font-size:12px">Value bet: </span><b style="font-size:14px;color:#4ade80">${analysis.valueBet}</b></div>`:""}
+      ${analysis.summary?`<div style="font-size:13px;color:#ccc;line-height:1.5">${analysis.summary}</div>`:""}`;
+    document.getElementById("predBox").classList.remove("hidden");
+
+    // Render horses
+    const rc = ["r1","r2","r3"];
+    const finalHorses = extracted.horses.map(h => {
+      const a = analysis.horses.find(x=>x.name?.toLowerCase()===h.name?.toLowerCase()||h.name?.toLowerCase().includes(x.name?.toLowerCase().split(" ")[0]||"___"))||{};
+      const d = horseDataMap[h.name];
+      let fd = null;
+      if(d?.results?.length) {
+        const wins = d.results.filter(r=>r.position==="1"||r.position===1).length;
+        fd = {last5:d.results.slice(0,5).map(r=>`${r.position}/${r.runners}`).join("-"), winPct:`${Math.round(wins/d.results.length*100)}%`, total:d.results.length};
+      }
+      return {...h,...a,fd};
+    }).sort((a,b)=>(b.score||0)-(a.score||0));
+
+    document.getElementById("horsesList").innerHTML = finalHorses.map((h,i)=>{
+      const sc = h.score>=70?"bg":h.score>=45?"by":"br";
+      return `<div class="horse-card ${i===0?"top1":""}">
+        <div class="rank ${rc[i]||""}">${i+1}</div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">
+            <span style="font-weight:700;font-size:15px;color:#f1f1f1">${h.name}</span>
+            ${h.score!=null?`<span class="badge ${sc}">${h.score}%</span>`:""}
+            ${h.odds?`<span class="badge bb">@ ${h.odds}</span>`:""}
+            ${h.isValue?`<span class="badge bg">VALUE BET</span>`:""}
+          </div>
+          ${h.reasoning?`<div style="font-size:12px;color:#aaa;line-height:1.6">${h.reasoning}</div>`:""}
+          ${h.fd?`<div style="font-size:11px;color:#666;margin-top:4px;display:flex;flex-wrap:wrap;gap:4px 14px"><span>📊 ${h.fd.last5}</span><span>🏆 Win: ${h.fd.winPct}</span><span>Забігів: ${h.fd.total}</span></div>`:""}
+        </div>
+      </div>`;
+    }).join("");
+    document.getElementById("horsesSection").classList.remove("hidden");
+
+    document.getElementById("loadingBox").classList.add("hidden");
+    document.getElementById("lastUpdate").textContent = "↻ " + new Date().toLocaleTimeString("uk-UA");
+    addLog(`✓ Готово! Фаворит: ${analysis.topPick}`, "success");
+
+  } catch(e) {
+    document.getElementById("loadingBox").classList.add("hidden");
+    document.getElementById("errorBox").textContent = "⚠️ " + e.message;
+    document.getElementById("errorBox").classList.remove("hidden");
+    addLog(`ПОМИЛКА: ${e.message}`, "error");
+  }
+  document.getElementById("mainBtn").disabled = false;
+}
+</script>
+</body>
+</html>
